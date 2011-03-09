@@ -1,0 +1,36 @@
+#!/usr/bin/python
+
+import relcolapp
+
+import os
+import sys
+
+def daemonize():
+    try:
+        if os.fork() != 0:
+            return 0
+    except OSError, e:
+        sys.stderr.write("fork failed: %d (%s)\n" % (e.errno, e.strerror))
+        return 1
+
+    # decouple from parent environment
+    os.chdir("/")
+    os.setsid()
+    os.umask(0) 
+
+    # redirect standard file descriptors
+    sys.stdout.flush()
+    sys.stderr.flush()
+    si = file("/dev/null", 'r')
+    so = file("/dev/null", 'a+')
+    se = file("/dev/null", 'a+', 0)
+    os.dup2(si.fileno(), sys.stdin.fileno())
+    os.dup2(so.fileno(), sys.stdout.fileno())
+    os.dup2(se.fileno(), sys.stderr.fileno())
+
+    relcolapp.run()
+
+    return 0
+
+if __name__ == "__main__":
+    exit(daemonize())
