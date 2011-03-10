@@ -100,7 +100,7 @@ class Controller:
             return
         logging.debug( "release results count= " + str(len(releaseResults)) )
 
-        storageReleases = self._storage.getReleases(artist)
+        storageReleases = self._storage.getReleases(artist.getKey())
 
         removeReleases = storageReleases - releaseResults
         for rr in removeReleases:

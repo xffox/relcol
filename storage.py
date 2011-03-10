@@ -224,10 +224,11 @@ class Storage:
         if not self._isConnected:
             raise InvalidStorageState("not connected")
 
-        cur = self._con.cursor()
         # without foreign keys
-        cur.execute( "DELETE FROM release WHERE artist_key=?",
-                (artistKey,) )
+        for release in self.getReleases(artistKey):
+            self.remRelease(release.getKey())
+
+        cur = self._con.cursor()
         cur.execute( "DELETE FROM artist WHERE rowid=?",
                 (artistKey,) )
         cur.close()
@@ -236,7 +237,7 @@ class Storage:
 
         self._notifyClients( lambda c: c.artistRemoved(artistKey) )
 
-    def getReleases(self, storageArtist):
+    def getReleases(self, artistKey):
         if not self._isConnected:
             raise InvalidStorageState("not connected")
 
@@ -244,7 +245,7 @@ class Storage:
         cur.execute( """SELECT rowid, artist_key, title, date, tracks_count
                 FROM release
                 WHERE artist_key=?""",
-                (storageArtist.getKey(),) )
+                (artistKey,) )
         res = set()
         for r in cur:
             res.add(StorageRelease(r[0], r[1], r[2], r[3], r[4]))
