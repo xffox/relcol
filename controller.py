@@ -109,5 +109,5 @@ class Controller:
 
         addedReleases = releaseResults - storageReleases
         for ar in addedReleases:
-            self._storage.addRelease(artist, ar)
+            self._storage.addRelease(artist.getKey(), ar)
         del addedReleases

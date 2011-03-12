@@ -252,15 +252,15 @@ class Storage:
         cur.close()
         return res
 
-    def addRelease(self, storageArtist, release):
+    def addRelease(self, artistKey, release):
         if not self._isConnected:
             raise InvalidStorageState("not connected")
 
         cur = self._con.cursor()
-        cur.execute( """INSERT INTO release(title, date, tracks_count, artist_key)
+        cur.execute("""INSERT INTO release(title, date, tracks_count, artist_key)
                 VALUES(?, ?, ?, ?)""",
                 (release.getTitle(), release.getDate(), release.getTracksCount(),
-                storageArtist.getKey()) )
+                artistKey))
 
         self._con.commit()
 
@@ -273,11 +273,11 @@ class Storage:
             ops.append("=")
         else:
             ops.append("is")
-        cur.execute( """SELECT rowid FROM release
+        cur.execute("""SELECT rowid FROM release
                 WHERE title=? AND date %s ?
                 AND tracks_count %s ? AND artist_key=?""" % tuple(ops),
                 (release.getTitle(), release.getDate(), release.getTracksCount(),
-                storageArtist.getKey()) )
+                artistKey))
         r = cur.fetchone()
         if r:
             releaseKey = r[0]
