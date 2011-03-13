@@ -134,6 +134,9 @@ class Storage:
         logging.debug("storage disconnected")
 
     def getArtist(self, artistKey):
+        if not self._isConnected:
+            raise InvalidStorageState("not connected")
+
         if artistKey == None:
             raise InvalidArgument
 
@@ -153,7 +156,10 @@ class Storage:
         raise KeyNotFound(artistKey)
 
     def getRelease(self, releaseKey):
-        if releaseKey == None:
+        if not self._isConnected:
+            raise InvalidStorageState("not connected")
+
+        if releaseKey is None:
             raise InvalidArgument
 
         cur = self._con.cursor()
@@ -187,6 +193,9 @@ class Storage:
     def addArtist(self, artist):
         if not self._isConnected:
             raise InvalidStorageState("not connected")
+
+        if artist is None:
+            raise InvalidArgument
 
         cur = self._con.cursor()
         cur.execute( """INSERT INTO artist(name, date, disambiguation)
@@ -224,6 +233,9 @@ class Storage:
         if not self._isConnected:
             raise InvalidStorageState("not connected")
 
+        if artistKey is None:
+            raise InvalidArgument
+
         # without foreign keys
         for release in self.getReleases(artistKey):
             self.remRelease(release.getKey())
@@ -241,6 +253,9 @@ class Storage:
         if not self._isConnected:
             raise InvalidStorageState("not connected")
 
+        if artistKey is None:
+            raise InvalidArgument
+
         cur = self._con.cursor()
         cur.execute( """SELECT rowid, artist_key, title, date, tracks_count
                 FROM release
@@ -255,6 +270,9 @@ class Storage:
     def addRelease(self, artistKey, release):
         if not self._isConnected:
             raise InvalidStorageState("not connected")
+
+        if artistKey is None or release is None:
+            raise InvalidArgument
 
         cur = self._con.cursor()
         cur.execute("""INSERT INTO release(title, date, tracks_count, artist_key)
@@ -294,6 +312,9 @@ class Storage:
     def remRelease(self, releaseKey):
         if not self._isConnected:
             raise InvalidStorageState("not connected")
+
+        if releaseKey is None:
+            raise InvalidArgument
 
         cur = self._con.cursor()
         cur.execute( "DELETE FROM release WHERE rowid=?",
