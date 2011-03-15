@@ -1,0 +1,22 @@
+relcol is a music releases info collector written in python. It currently uses musicbrainz database to get data.
+
+Example config:
+
+[global]
+interval = 3600
+command = echo "echo \"{date} - {artist} - {release}\" | sendxmpp name@server" | at 18:00 {date}
+
+[dropkick murphys]
+name = Dropkick Murphy's
+
+[flogging molly]
+name = Flogging Molly
+
+[devildriver]
+name = DevilDriver
+
+[cob]
+name = Children of Bodom
+
+[lake of tears]
+name = Lake of Tears
