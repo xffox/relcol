@@ -1,5 +1,9 @@
 relcol is a music releases info collector written in python. It currently uses musicbrainz database to get data.
 
+Config is read from '~/.relcol/conf.txt'.
+
+'~/.relcol/' also contains wordy 'relcol.log' and 'save.dat' with known releases.
+
 Example config:
 
 [global]
