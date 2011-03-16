@@ -27,24 +27,26 @@ def run():
         logging.error(traceback.format_exc())
 
 def _run():
-    curStorage = storage.Storage()
+    try:
+        curSettings = settings.Settings(_getWorkDir() + "/conf.txt")
+    except settings.ReadFailed:
+        logging.warning("settings read failed")
+        return
 
+    curCollector = collector.Collector()
+    curCollector.addSource(musicbrainz_source.MusicbrainzSource())
+
+    curStorage = storage.Storage()
     try:
         curStorage.connect(_getWorkDir() + "/save.dat")
     except InternalStorageError:
         logging.error("storage connect failed")
         raise
 
-    curCollector = collector.Collector()
-    curCollector.addSource(musicbrainz_source.MusicbrainzSource())
-
-    curSettings = settings.Settings(_getWorkDir() + "/conf.txt")
-
     curController = controller.Controller(curStorage, curCollector,
             curSettings)
 
     atClient = at_client.AtClient(curSettings)
-
     atClient.setStorage(curStorage)
 
     curController.run()

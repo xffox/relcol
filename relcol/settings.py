@@ -3,6 +3,9 @@ from model import Artist
 import logging
 import ConfigParser
 
+class ReadFailed(Exception):
+    pass
+
 class Settings:
     def __init__(self, path):
         self._artists = None
@@ -15,7 +18,7 @@ class Settings:
         pass
 
     def getArtists(self):
-        if self._artists:
+        if not self._artists is None:
             return self._artists.copy()
         return None
 
@@ -55,10 +58,10 @@ class Settings:
                     except:
                         pass
         else:
-            logging.warning("settings read failed")
+            raise ReadFailed
 
     def _setDefaults(self):
-        if self._artists != None:
+        if not self._artists is None:
             self._artists.clear()
         else:
             self._artists = set()
