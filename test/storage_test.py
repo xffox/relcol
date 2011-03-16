@@ -1,5 +1,5 @@
-import storage
-from model import Artist, Release
+from relcol import storage
+from relcol.model import Artist, Release
 
 import unittest
 import os

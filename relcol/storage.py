@@ -4,7 +4,6 @@ import logging
 from model import Artist, Release
 
 # TODO: there is almost no error handling - fix it
-# TODO: use keys instread of objects
 
 class InvalidStorageState(Exception):
     pass

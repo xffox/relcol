@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import relcolapp
+from relcol import app
 
 import os
 import sys
@@ -28,7 +28,7 @@ def daemonize():
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
 
-    relcolapp.run()
+    app.run()
 
     return 0
 
