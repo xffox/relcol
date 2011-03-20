@@ -38,20 +38,18 @@ def _run():
 
     curStorage = storage.Storage()
     try:
-        curStorage.connect(_getWorkDir() + "/save.dat")
+        with curStorage.connect(_getWorkDir() + "/save.dat"):
+            curController = controller.Controller(curStorage, curCollector,
+                    curSettings)
+
+            atClient = at_client.AtClient(curSettings)
+            atClient.setStorage(curStorage)
+
+            curController.run()
+
     except InternalStorageError:
         logging.error("storage connect failed")
         raise
-
-    curController = controller.Controller(curStorage, curCollector,
-            curSettings)
-
-    atClient = at_client.AtClient(curSettings)
-    atClient.setStorage(curStorage)
-
-    curController.run()
-
-    curStorage.disconnect()
 
 def _mkWorkDir():
     wd = _getWorkDir()

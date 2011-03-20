@@ -2,8 +2,10 @@ import sqlite3
 import logging
 
 from model import Artist, Release
+import subscription_observer
 
 # TODO: there is almost no error handling - fix it
+# TODO: maybe not commit every action
 
 class InvalidStorageState(Exception):
     pass
@@ -30,25 +32,24 @@ class StorageClient:
             return
 
         if self._storage != None:
-            try:
-                self._storage._remClient(self)
-            except:
-                logging.debug("removing client from disconnected storage")
+            self._storage._remClient(self)
 
         if storage != None:
-            try:
-                # references cycle - beware
                 storage._addClient(self)
-            except InvalidStorageState:
-                raise
+
         self._storage = storage
-        self.storageChanged(storage)
+        self.storageChanged()
 
     def getStorage(self):
         return self._storage
 
-    def storageChanged(self, storage):
-        # override to add initial data reading
+    def storageConnected(self):
+        pass
+
+    def storageDisconnected(self):
+        pass
+
+    def storageChanged(self):
         pass
 
     def artistAdded(self, artistKey):
@@ -83,21 +84,34 @@ class StorageRelease(Release):
     def getArtistKey(self):
         return self._artistKey
 
+class ConnectContextManager:
+    def __init__(self, storage):
+        if storage is None:
+            raise InvalidArgument
+        self._storage = storage
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._storage.isConnected():
+            self._storage.disconnect()
+        del self._storage
+
 class Storage:
     def __init__(self):
-        self._clients = set()
         self._isConnected = False
         self._con = None
 
     def __del__(self):
         if self._isConnected:
-            self.disconnect()
+            self._deleteConnection()
 
     def connect(self, path):
         if self._isConnected:
             raise InvalidStorageState("connecting to connected")
 
-        self._con = sqlite3.connect(path)
+        self._createConnection(path)
 
         cur = self._con.cursor()
         cur.execute("""CREATE TABLE IF NOT EXISTS
@@ -120,17 +134,23 @@ class Storage:
         self._isConnected = True
         logging.debug("storage connected")
 
+        self._notifyClients(lambda c: c.storageConnected())
+
+        return ConnectContextManager(self)
+
     def disconnect(self):
         if not self._isConnected:
             raise InvalidStorageState("not connected")
-        self._notifyClients(lambda c: c.setStorage(None))
-        self._clients.clear()
 
-        self._con.close()
-        self._con = None
+        self._deleteConnection()
 
         self._isConnected = False
         logging.debug("storage disconnected")
+
+        self._notifyClients(lambda c: c.storageDisconnected())
+
+    def isConnected(self):
+        return self._isConnected
 
     def getArtist(self, artistKey):
         if not self._isConnected:
@@ -324,19 +344,19 @@ class Storage:
 
         self._notifyClients(lambda c: c.releaseRemoved(releaseKey))
 
+    def _createConnection(self, path):
+        self._con = sqlite3.connect(path)
+
+    def _deleteConnection(self):
+        self._con.close()
+        self._con = None
+
     def _addClient(self, storageClient):
-        if not self._isConnected:
-            raise InvalidStorageState("not connected")
-        self._clients.add(storageClient)
+        subscription_observer.subscribe(self, storageClient)
 
     def _remClient(self, storageClient):
-        if not self._isConnected:
-            raise InvalidStorageState("not connected")
-        self._clients.remove(storageClient)
+        subscription_observer.unsubscribe(self, storageClient)
 
     def _notifyClients(self, notify):
         # notify is lambda with notification
-        # use copy because notify can alter the clients list
-        clients = self._clients.copy();
-        for c in clients:
-            notify(c)
+        subscription_observer.callOnReceivers(self, notify)

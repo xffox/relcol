@@ -29,9 +29,6 @@ class AtClient(StorageClient):
             raise ValueError
         self._settings = settings
 
-    def storageChanged(self, storage):
-        pass
-
     def artistAdded(self, artistKey):
         try:
             artist = self.getStorage().getArtist(artistKey)
